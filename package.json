@@ -1,5 +1,5 @@
 {
-  "name": "n8n-node-appstore-finance",
+  "name": "n8n-nodes-appstore-finance",
   "version": "1.0.0",
   "description": "AppStore Finance",
   "keywords": [
@@ -13,7 +13,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/zubial/n8n-node-appstore-finance.git"
+    "url": "git+https://github.com/zubial/n8n-nodes-appstore-finance.git"
   },
   "engines": {
     "node": ">=18.10",
