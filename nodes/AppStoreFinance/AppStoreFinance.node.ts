@@ -5,7 +5,7 @@ import {
 	INodeTypeDescription,
 	NodeConnectionType,
 } from 'n8n-workflow';
-import { URLSearchParams } from 'node:url'
+import { URLSearchParams } from 'node:url';
 import axios from 'axios';
 import * as zlib from 'zlib';
 import * as util from 'util';
@@ -61,12 +61,12 @@ export class AppStoreFinance implements INodeType {
 				noDataExpression: true,
 				options: [
 					{
-						name: 'Financial report',
-						value: 'FINANCIAL'
+						name: 'Financial Report',
+						value: 'FINANCIAL',
 					},
 					{
-						name: 'Financial detail report',
-						value: 'FINANCE_DETAIL'
+						name: 'Financial Detail Report',
+						value: 'FINANCE_DETAIL',
 					},
 				],
 				default: 'FINANCIAL',
@@ -169,11 +169,13 @@ export class AppStoreFinance implements INodeType {
 				returnItems.push({
 					json: {},
 					binary: {
-						report: await this.helpers.prepareBinaryData(Buffer.from(decompressed), `report_${reportDate}.tsv`),
+						report: await this.helpers.prepareBinaryData(
+							Buffer.from(decompressed),
+							`report_${reportDate}.tsv`,
+						),
 					},
 					pairedItem: { item: itemIndex },
 				});
-
 			} else {
 				const content = decompressed.toString('utf8');
 				const lines = content.trim().split('\n');
@@ -181,7 +183,11 @@ export class AppStoreFinance implements INodeType {
 				if (reportType === 'FINANCE_DETAIL') {
 					const meta: Record<string, string> = {};
 					let i = 0;
-					while (i < lines.length && lines[i].includes('\t') && !lines[i].startsWith('Transaction Date')) {
+					while (
+						i < lines.length &&
+						lines[i].includes('\t') &&
+						!lines[i].startsWith('Transaction Date')
+					) {
 						const [key, value] = lines[i].split('\t');
 						meta[key.trim()] = value.trim();
 						i++;
@@ -218,7 +224,6 @@ export class AppStoreFinance implements INodeType {
 					newItem.json[resultField + '_meta'] = meta;
 					newItem.json[resultField + '_detailed'] = transactions;
 					newItem.json[resultField + '_aggregated'] = aggregated;
-
 				} else {
 					const report_detailed: any[] = [];
 					const report_aggregated: any[] = [];
@@ -278,7 +283,7 @@ function generateJWT(credentials: any): string {
 	const payload = {
 		iss: credentials.issuerId,
 		iat: Math.floor(Date.now() / 1000),
-		exp: Math.floor(Date.now() / 1000) + (60 * 10),
+		exp: Math.floor(Date.now() / 1000) + 60 * 10,
 		aud: 'appstoreconnect-v1',
 	};
 
