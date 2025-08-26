@@ -12,18 +12,18 @@ import * as util from 'util';
 
 const gunzip = util.promisify(zlib.gunzip);
 
-export class AppStoreFinance implements INodeType {
+export class AppStoreSales implements INodeType {
 	description: INodeTypeDescription = {
-		displayName: 'AppStore Finance',
-		name: 'appStoreFinance',
-		icon: 'file:AppStoreFinanceLogo.svg',
+		displayName: 'AppStore Sales',
+		name: 'appStoreSales',
+		icon: 'file:AppStoreSalesLogo.svg',
 		group: ['output'],
 		version: 1,
 		triggerPanel: false,
 		subtitle: '={{$parameter["operation"]}}',
-		description: 'Download Apple App Store financial reports',
+		description: 'Download Apple App Store sales reports',
 		defaults: {
-			name: 'AppStore Finance',
+			name: 'AppStore Sales',
 		},
 		inputs: [NodeConnectionType.Main],
 		outputs: [NodeConnectionType.Main],
@@ -55,21 +55,21 @@ export class AppStoreFinance implements INodeType {
 				default: 'parse_report',
 			},
 			{
-				displayName: 'Report Type',
-				name: 'reportType',
+				displayName: 'Frequency',
+				name: 'frequency',
 				type: 'options',
 				noDataExpression: true,
 				options: [
 					{
-						name: 'Financial Report',
-						value: 'FINANCIAL',
+						name: 'Daily Sales Report',
+						value: 'DAILY',
 					},
 					{
-						name: 'Financial Detail Report',
-						value: 'FINANCE_DETAIL',
+						name: 'Monthly Sales Report',
+						value: 'MONTHLY',
 					},
 				],
-				default: 'FINANCIAL',
+				default: 'SALES_MONTHLY',
 			},
 			{
 				displayName: 'Vendor Number',
@@ -79,18 +79,10 @@ export class AppStoreFinance implements INodeType {
 				required: true,
 			},
 			{
-				displayName: 'Report Date (YYYY-MM)',
+				displayName: 'Report Date (YYYY-MM-DD)',
 				name: 'reportDate',
 				type: 'string',
 				default: '',
-				required: true,
-			},
-			{
-				displayName: 'Region Code',
-				name: 'regionCode',
-				type: 'string',
-				default: '',
-				description: 'ZZ or Z1 for all Regions',
 				required: true,
 			},
 			{
@@ -129,9 +121,8 @@ export class AppStoreFinance implements INodeType {
 			// Parameters & Options
 			const operation = this.getNodeParameter('operation', itemIndex);
 			const vendorNumber = this.getNodeParameter('vendorNumber', itemIndex) as string;
-			const reportType = this.getNodeParameter('reportType', itemIndex) as string;
+			const frequency = this.getNodeParameter('frequency', itemIndex) as string;
 			const reportDate = this.getNodeParameter('reportDate', itemIndex) as string;
-			const regionCode = this.getNodeParameter('regionCode', itemIndex) as string;
 			const options = this.getNodeParameter('options', itemIndex);
 			const resultField = options.result_field ? (options.result_field as string) : 'report';
 
@@ -141,14 +132,15 @@ export class AppStoreFinance implements INodeType {
 			const jwtToken = generateJWT(credentials);
 
 			const params = new URLSearchParams({
+				'filter[reportType]': "SALES",
+				'filter[reportSubType]': "SUMMARY",
+				'filter[frequency]' : frequency,
 				'filter[reportDate]': reportDate,
-				'filter[reportType]': reportType,
-				'filter[regionCode]': regionCode,
 				'filter[vendorNumber]': vendorNumber,
 			}).toString();
 
-			const url = `https://api.appstoreconnect.apple.com/v1/financeReports?${params}`;
-			console.log('Finance Report Request URL:', url);
+			const url = `https://api.appstoreconnect.apple.com/v1/salesReports?${params}`;
+			console.log('Sales Report Request URL:', url);
 
 			let response;
 			try {
@@ -180,90 +172,20 @@ export class AppStoreFinance implements INodeType {
 				const content = decompressed.toString('utf8');
 				const lines = content.trim().split('\n');
 
-				if (reportType === 'FINANCE_DETAIL') {
-					const meta: Record<string, string> = {};
-					let i = 0;
-					while (
-						i < lines.length &&
-						lines[i].includes('\t') &&
-						!lines[i].startsWith('Transaction Date')
-					) {
-						const [key, value] = lines[i].split('\t');
-						meta[key.trim()] = value.trim();
-						i++;
-					}
-
-					const header = lines[i].split('\t');
-					i++;
-					const transactions = [];
-					for (; i < lines.length; i++) {
-						if (lines[i].startsWith('Country Of Sale')) {
-							i++;
-							break;
-						}
-						const row = lines[i].split('\t');
-						const entry: { [key: string]: string } = {};
-						header.forEach((key, idx) => {
-							entry[key] = row[idx];
-						});
-						transactions.push(entry);
-					}
-
-					const aggregated = [];
-					for (; i < lines.length; i++) {
-						const row = lines[i].split('\t');
-						if (row.length < 4) continue;
-						aggregated.push({
-							country: row[0],
-							currency: row[1],
-							quantity: row[2],
-							extendedPartnerShare: row[3],
-						});
-					}
-
-					newItem.json[resultField + '_meta'] = meta;
-					newItem.json[resultField + '_detailed'] = transactions;
-					newItem.json[resultField + '_aggregated'] = aggregated;
-				} else {
-					const report_detailed: any[] = [];
-					const report_aggregated: any[] = [];
-
-					let parsingAggregated = false;
-					let headers: string[] = [];
-
-					for (let i = 0; i < lines.length; i++) {
-						const row = lines[i].split('\t');
-
-						if (row[0] === 'Total_Rows') {
-							parsingAggregated = true;
-							i++;
-							continue;
-						}
-
-						if (!parsingAggregated) {
-							if (i === 0) {
-								headers = row;
-								continue;
-							}
-							const json: { [key: string]: string } = {};
-							headers.forEach((key, index) => {
-								json[key] = row[index];
-							});
-							report_detailed.push(json);
-						} else {
-							if (row.length < 4) continue;
-							report_aggregated.push({
-								country: row[0],
-								currency: row[1],
-								quantity: row[2],
-								extendedPartnerShare: row[3],
-							});
-						}
-					}
-
-					newItem.json[resultField + '_detailed'] = report_detailed;
-					newItem.json[resultField + '_aggregated'] = report_aggregated;
+				let i = 0;
+				const header = lines[i].split('\t');
+				i++;
+				const transactions = [];
+				for (; i < lines.length; i++) {
+					const row = lines[i].split('\t');
+					const entry: { [key: string]: string } = {};
+					header.forEach((key, idx) => {
+						entry[key] = row[idx];
+					});
+					transactions.push(entry);
 				}
+
+				newItem.json[resultField] = transactions;
 
 				returnItems.push(newItem);
 			}
@@ -298,6 +220,5 @@ function generateJWT(credentials: any): string {
 
 	return jwt.sign(payload, privateKey, options);
 }
-
 
 

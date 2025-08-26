@@ -1,0 +1,14 @@
+{
+	"node": "n8n-nodes-base.appstore-sales",
+	"nodeVersion": "1.0",
+	"codexVersion": "1.0",
+	"categories": ["Utility", "Core Nodes"],
+	"resources": {
+		"primaryDocumentation": [
+			{
+				"url": "https://developer.apple.com/documentation/appstoreconnectapi"
+			}
+		]
+	},
+	"alias": ["FinOps"]
+}
