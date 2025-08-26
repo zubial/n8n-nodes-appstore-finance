@@ -69,7 +69,7 @@ export class AppStoreSales implements INodeType {
 						value: 'MONTHLY',
 					},
 				],
-				default: 'SALES_MONTHLY',
+				default: 'MONTHLY',
 			},
 			{
 				displayName: 'Vendor Number',
