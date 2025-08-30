@@ -1,6 +1,6 @@
 {
   "name": "n8n-nodes-appstore-finance",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "AppStore Finance",
   "keywords": [
     "FinOps", "Zubial", "n8n-community-node-package"
