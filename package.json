@@ -37,7 +37,8 @@
     "n8nNodesApiVersion": 1,
     "nodes": [
       "dist/nodes/AppStoreFinance/AppStoreFinance.node.js",
-      "dist/nodes/AppStoreSales/AppStoreSales.node.js"
+      "dist/nodes/AppStoreSales/AppStoreSales.node.js",
+      "dist/nodes/AppStoreSales/AppStoreAnalytics.node.js"
     ],
     "credentials": [
       "dist/credentials/AppStoreAPI.credentials.js"
