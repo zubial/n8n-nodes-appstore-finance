@@ -107,7 +107,6 @@ export class AppStoreAnalytics implements INodeType {
 				name: 'reportDate',
 				type: 'string',
 				default: '2025-01-01',
-				required: true,
 			},
 			{
 				displayName: 'Report Category',
@@ -199,10 +198,10 @@ export class AppStoreAnalytics implements INodeType {
 
 				if (report.length > 0) {
 
-					const instanceParams = new URLSearchParams({
-						'filter[granularity]': granularity,
-						'filter[processingDate]': reportDate,
-					}).toString();
+					const instanceParams  = new URLSearchParams({
+                            'filter[granularity]': granularity,
+                            'filter[processingDate]': reportDate,
+                        }).toString();
 
 					const instanceUrl = `https://api.appstoreconnect.apple.com/v1/analyticsReports/${report[0].id}/instances?${instanceParams}`;
 					//console.log(instanceUrl);
